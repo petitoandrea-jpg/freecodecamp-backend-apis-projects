@@ -1,1 +1,77 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const dns = require('dns');
 
+const app = express();
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.urlencoded({ extended: false }));
+app.use('/public', express.static(`${process.cwd()}/public`));
+
+app.get('/', function (req, res) {
+  res.sendFile(process.cwd() + '/views/index.html');
+});
+
+const urlDatabase = [];
+
+// Endpoint POST per abbreviare l'URL
+app.post('/api/shorturl', function (req, res) {
+  const originalUrl = req.body.url;
+
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(originalUrl);
+  } catch (err) {
+    return res.json({ error: 'invalid url' });
+  }
+
+  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+    return res.json({ error: 'invalid url' });
+  }
+
+  dns.lookup(parsedUrl.hostname, (err, address) => {
+    if (err || !address) {
+      return res.json({ error: 'invalid url' });
+    }
+
+    const existingIndex = urlDatabase.findIndex(
+      (entry) => entry.original_url === originalUrl
+    );
+
+    if (existingIndex !== -1) {
+      return res.json({
+        original_url: originalUrl,
+        short_url: urlDatabase[existingIndex].short_url
+      });
+    }
+
+    const short_url = urlDatabase.length + 1;
+    urlDatabase.push({
+      original_url: originalUrl,
+      short_url: short_url
+    });
+
+    res.json({
+      original_url: originalUrl,
+      short_url: short_url
+    });
+  });
+});
+
+// Endpoint GET per reindirizzamento
+app.get('/api/shorturl/:short_url', function (req, res) {
+  const shortUrlParam = parseInt(req.params.short_url, 10);
+  const entry = urlDatabase.find((item) => item.short_url === shortUrlParam);
+
+  if (!entry) {
+    return res.json({ error: 'No short URL found for the given input' });
+  }
+
+  res.redirect(entry.original_url);
+});
+
+app.listen(port, function () {
+  console.log(`Listening on port ${port}`);
+});
