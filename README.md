@@ -33,4 +33,4 @@ Microservizio per il caricamento di file multipart (`form-data`) tramite `multer
 
 ## 📜 Certificato
 Puoi verificare la mia certificazione ufficiale su freeCodeCamp tramite il seguente link:  
-👉 [Visualizza il certificato](INCOLLA_QUI_IL_LINK_DEL_TUO_CERTIFICATO)
+👉 [Visualizza il certificato](https://www.freecodecamp.org/certification/andreapetito/back-end-development-and-apis)
